@@ -23,11 +23,11 @@ const db = mysql.createConnection ({
     console.log("*************************************");
     console.log("          EMPLOYEE TRACKER           ");
     console.log("*************************************");
-
+    startQuestions();
   });
 
 
-// starting questions
+// starting questions prompt
 function startQuestions() {
     inquirer.prompt([
         {
@@ -81,4 +81,30 @@ function startQuestions() {
                 break;
         }
     })
+};
+
+
+// Viewing Selections
+
+function viewDepartments() {
+    const sql = `SELECT department.id, department.name AS department FROM department`;
+    db.query(sql, (err, res) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(res);
+        startQuestions();
+    });
+};
+
+
+function viewRoles() {
+    const sql = `SELECT role.id, role.title AS role, role.salary, department.name AS department FROM role INNER JOIN department ON (department.id = role.department_id);`;
+    db.query(sql, (err, res) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(res);
+        startQuestions();
+    });
 };
