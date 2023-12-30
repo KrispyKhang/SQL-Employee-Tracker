@@ -6,6 +6,7 @@ const consoleTable = require('console.table');
 require('dotenv').config();
 
 const mysql = require('mysql2');
+const { response } = require('express');
 
 // connect to database
 const db = mysql.createConnection ({
@@ -108,3 +109,142 @@ function viewRoles() {
         startQuestions();
     });
 };
+
+function viewEmployees() {
+    const sql = `SELECT employee.id, employee.first_name, employee.last_name, role.title AS role, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee INNER JOIN role ON (role.id = employee.role_id) INNER JOIN department ON (department.id = role.department_id) LEFT JOIN employee manager ON employee.manager_id = manager.id;`;
+    db.query(sql, (err, res) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(res);
+        startQuestions();
+    });
+};
+
+// Adding Selections
+
+function addDepartment() {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'department',
+            message: 'What is the name of the department?'
+        }
+    ]).then(function (answer) {
+        const sql = `INSERT INTO department(name) VALUES (?)`;
+        // using parameterized queries with an array for passing the user input to the database query.
+        db.query(sql, [answer.department], (err, res) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log("Added " + answer.department + " to the database")
+            startQuestions();
+        });
+    });
+};
+
+function addRole() {
+    const sql2 = `SELECT * FROM department`;
+    db.query(sql2, (error, response) => {
+        departmentList = response.map(departments => ({
+            name: departments.name,
+            value: departments.id
+        }));
+            
+        inquirer.prompt([
+            {
+                type: 'input',
+                name: 'title',
+                message: 'What is the name of the role?',
+            },
+            {
+                type: 'input',
+                name: 'salary',
+                message: 'What is the salary of the role?',
+            },
+            {
+                type: 'list',
+                name: 'department',
+                message: 'Which Department does the role belong to?',
+                choices: departmentList
+            }
+        ]).then((answers) => {
+            const insertQuery = `INSERT INTO role SET ?`;
+            const roleData = {
+                title: answers.title,
+                salary: answers.salary,
+                department_id: answers.department
+            };
+        
+            db.query(insertQuery, roleData, (err, res) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                console.log("Added " + answers.title + " to the database");
+                startingQuestion();
+            });
+        });
+    });
+};
+
+
+function addEmployee() {
+    const sql2 = `SELECT * FROM employee`;
+    db.query(sql2, (error, response) => {
+        employeeList = response.map(employees => ({
+            name: employees.first_name.concat(" ", employees.last_name),
+            value: employees.id
+        }));
+
+    const sql3 = `SELECT * FROM role`;
+    db.query(sql3, (error, response) => {
+        roleList = response.map(role => ({
+            name: role.title,
+            value: role.id
+        }));
+
+        inquirer.prompt([
+            {
+                type: 'input',
+                name: 'firstName',
+                message: 'What is the first name of the employee?',
+            },
+            {
+                type: 'input',
+                name: 'lastName',
+                message: 'What is the last name of the employee?',
+            },
+            {
+                type: 'list',
+                name: 'role',
+                message: 'What is the role of the employee?',
+                choices: roleList
+            },
+            {
+                type: 'list',
+                name: 'manager',
+                message: 'Who is the manager of the employee?',
+                choices: employeeList
+            }
+        ]).then((answers) => {
+            const insertQuery = `INSERT INTO employee SET ?`;
+            const employeeData = {
+                first_name: answers.firstName,
+                last_name: answers.lastName,
+                role_id: answers.role,
+                manager_id: answers.manager
+            };
+        
+            db.query(insertQuery, employeeData, (err, res) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                console.log("Added " + answers.firstName + " " + answers.lastName + " to the database");
+                startingQuestion();
+            });
+        });
+    });
+});
+}
