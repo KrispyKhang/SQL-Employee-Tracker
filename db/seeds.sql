@@ -21,6 +21,6 @@ VALUES ('John', 'Doe', 1, NULL),
        ('Kevin', 'Tupik', 4, 3),
        ('Malia', 'Brown', 5, NULL),
        ('Sarah', 'Lourd', 6, 5),
-       ('Tom', 'Allen', 7, 5),
-       ('Tina', 'Lee', 8, 7);
+       ('Tom', 'Allen', 7, 5);
+      
 
